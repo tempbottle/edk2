@@ -1600,36 +1600,41 @@ EfiShellExecute(
   UINTN                     Size;
   UINTN                     ExitDataSize;
   CHAR16                    *ExitData;
+  SHELL_STATUS              CalleeStatusCode;
 
   if ((PcdGet8(PcdShellSupportLevel) < 1)) {
     return (EFI_UNSUPPORTED);
   }
 
-  DevPath = AppendDevicePath (ShellInfoObject.ImageDevPath, ShellInfoObject.FileDevPath);
+  if (Environment != NULL) {
+    // If Environment isn't null, load a new image of the shell with its own
+    // environment
 
-  DEBUG_CODE_BEGIN();
-  Temp = ConvertDevicePathToText(ShellInfoObject.FileDevPath, TRUE, TRUE);
-  FreePool(Temp);
-  Temp = ConvertDevicePathToText(ShellInfoObject.ImageDevPath, TRUE, TRUE);
-  FreePool(Temp);
-  Temp = ConvertDevicePathToText(DevPath, TRUE, TRUE);
-  FreePool(Temp);
-  DEBUG_CODE_END();
+    DevPath = AppendDevicePath (ShellInfoObject.ImageDevPath, ShellInfoObject.FileDevPath);
 
-  Temp = NULL;
-  Size = 0;
-  ASSERT((Temp == NULL && Size == 0) || (Temp != NULL));
-  StrnCatGrow(&Temp, &Size, L"Shell.efi -_exit ", 0);
-  StrnCatGrow(&Temp, &Size, CommandLine, 0);
+    DEBUG_CODE_BEGIN();
+    Temp = ConvertDevicePathToText(ShellInfoObject.FileDevPath, TRUE, TRUE);
+    FreePool(Temp);
+    Temp = ConvertDevicePathToText(ShellInfoObject.ImageDevPath, TRUE, TRUE);
+    FreePool(Temp);
+    Temp = ConvertDevicePathToText(DevPath, TRUE, TRUE);
+    FreePool(Temp);
+    DEBUG_CODE_END();
 
-  Status = InternalShellExecuteDevicePath(
-    ParentImageHandle,
-    DevPath,
-    Temp,
-    (CONST CHAR16**)Environment,
-    StatusCode,
-    &ExitDataSize,
-    &ExitData);
+    Temp = NULL;
+    Size = 0;
+    ASSERT((Temp == NULL && Size == 0) || (Temp != NULL));
+    StrnCatGrow(&Temp, &Size, L"Shell.efi -_exit ", 0);
+    StrnCatGrow(&Temp, &Size, CommandLine, 0);
+
+    Status = InternalShellExecuteDevicePath(
+      ParentImageHandle,
+      DevPath,
+      Temp,
+      (CONST CHAR16**)Environment,
+      StatusCode,
+      &ExitDataSize,
+      &ExitData);
 
     if (Status == EFI_ABORTED) {
       // If the command exited with an error, the shell should put the exit
@@ -1654,11 +1659,31 @@ EfiShellExecute(
       Status = EFI_SUCCESS;
     }
 
-  //
-  // de-allocate and return
-  //
-  FreePool(DevPath);
-  FreePool(Temp);
+    FreePool(DevPath);
+    FreePool(Temp);
+  } else {
+    // If Environment is NULL, we are free to use and mutate the current shell
+    // environment. This is much faster as uses much less memory.
+
+    if (CommandLine == NULL) {
+      CommandLine = L"";
+    }
+
+    Status = RunCommand (CommandLine, &CalleeStatusCode);
+  }
+
+  // Pass up the command's exit code if the caller wants it
+  if (StatusCode != NULL) {
+    // CalleeStatusCode is a SHELL_STATUS. Convert to EFI_STATUS.
+    // EFI_STATUSes have top bit set when they are errors.
+    // (See UEFI Spec Appendix D)
+    if (CalleeStatusCode != SHELL_SUCCESS) {
+      *StatusCode = (EFI_STATUS) CalleeStatusCode | MAX_BIT;
+    } else {
+      *StatusCode = (EFI_STATUS) CalleeStatusCode;
+    }
+  }
+
   return(Status);
 }
 
