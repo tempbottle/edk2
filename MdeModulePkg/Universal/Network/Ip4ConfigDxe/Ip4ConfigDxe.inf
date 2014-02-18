@@ -67,4 +67,5 @@
 
 [Guids]
   gEfiNicIp4ConfigVariableGuid                  ## CONSUMES ## Guid
+  gEfiHostnameVariableGuid                      ## CONSUMES ## Guid
   gNicIp4ConfigNvDataGuid                       ## PRODUCES ## Guid
