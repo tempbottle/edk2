@@ -57,6 +57,10 @@
   # [LibraryClasses.ARM] and NULL mean link this library into all ARM images.
   #
   NULL|ArmPkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
+  ArmLib|ArmPkg/Library/ArmLib/ArmV7/ArmV7Lib.inf
+
+[LibraryClasses.AARCH64]
+  ArmLib|ArmPkg/Library/ArmLib/AArch64/AArch64Lib.inf
 
 [PcdsFixedAtBuild]
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0xFF
@@ -94,5 +98,10 @@
       NULL|ShellPkg/Library/UefiDpLib/UefiDpLib.inf
 !endif #$(INCLUDE_DP)
 !endif #$(NO_SHELL_PROFILES)
+
+      # Allows for running ARM Executable Files (AXF) from the shell. These are
+      # basically just ELF format binaries.
+      # Currently only tested on AArch64.
+      NULL|ShellPkg/Library/UefiRunAxfLib/UefiRunAxfLib.inf
   }
 
