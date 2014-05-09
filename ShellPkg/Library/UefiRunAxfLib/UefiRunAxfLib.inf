@@ -1,0 +1,72 @@
+##  @file
+# Run simple/static AXF(ELF) files from the shell.
+#
+# Copyright (c) 2010 - 2013, Intel Corporation. All rights reserved.
+# Copyright (c) 2014, ARM Limited. All rights reserved.
+# This program and the accompanying materials
+# are licensed and made available under the terms and conditions of the BSD License
+# which accompanies this distribution.  The full text of the license may be found at
+# http://opensource.org/licenses/bsd-license.php
+#
+# THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
+# WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010006
+  BASE_NAME                      = UefiRunAxfLib
+  FILE_GUID                      = dac36140-e17b-4269-9e4d-9a3c43158910
+  MODULE_TYPE                    = UEFI_DRIVER
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = NULL|UEFI_APPLICATION UEFI_DRIVER
+  CONSTRUCTOR                    = UefiRunAxfLibConstructor
+  DESTRUCTOR                     = UefiRunAxfLibDestructor
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = ARM AARCH64
+#
+
+[Sources.common]
+  UefiRunAxfLib.c
+  UefiRunAxfLib.h
+  UefiRunAxfLib.uni
+  RunAxf.c
+  ElfLoader.h
+  ElfLoader.c
+  # ELF definitions taken from BaseTools
+  elf32.h
+  elf64.h
+  elf_common.h
+
+[Packages]
+  ArmPkg/ArmPkg.dec
+  MdePkg/MdePkg.dec
+  ShellPkg/ShellPkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+
+[LibraryClasses]
+  ArmLib
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  DevicePathLib
+  MemoryAllocationLib
+  PrintLib
+  ShellCommandLib
+  ShellLib
+  SortLib
+  UefiLib
+  UefiRuntimeServicesTableLib
+  UefiBootServicesTableLib
+
+[Protocols]
+  gEfiLoadedImageProtocolGuid                             # ALWAYS_CONSUMED
+  gEfiDriverBindingProtocolGuid                           # SOMETIMES_CONSUMED
+  gEfiComponentName2ProtocolGuid                          # SOMETIMES_CONSUMED
+  gEfiLoadedImageDevicePathProtocolGuid                   # SOMETIMES_CONSUMED
+
+[Pcd]
+  gEfiMdePkgTokenSpaceGuid.PcdUefiLibMaxPrintBufferSize
